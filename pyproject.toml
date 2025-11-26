@@ -1,7 +1,7 @@
 ## Here's my code: 
 [project]
 name = "redis-ttk"
-version = "0.1.0"
+version = "0.1.1"
 description = "Default template for PDM package"
 authors = [
     {name = "涵曦", email = "im.hanxi@gmail.com"},
@@ -39,7 +39,7 @@ build = [
 # Ruff 配置
 [tool.ruff]
 # 目标 Python 版本
-target-version = "py314"
+target-version = "0.1.1"
 
 # 包含的文件模式
 include = ["*.py", "*.pyi"]
