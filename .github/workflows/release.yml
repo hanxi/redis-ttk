@@ -106,7 +106,7 @@ jobs:
       shell: bash
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: redis-ttk-${{ matrix.platform }}-${{ matrix.arch }}
         path: |
@@ -122,7 +122,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Get version from pyproject.toml
       id: get_version
