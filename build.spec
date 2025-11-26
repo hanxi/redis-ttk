@@ -14,6 +14,7 @@ main_script = "main.py"
 datas = [
     (str(project_root / "config"), "config"),
     (str(project_root / "gui"), "gui"),
+    (str(project_root / "pyproject.toml"), "."),  # 包含 pyproject.toml 文件
 ]
 
 # 隐藏导入模块

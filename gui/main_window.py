@@ -624,13 +624,87 @@ class MainWindow:
 
     def show_about(self):
         """显示关于对话框"""
-        showinfo(
-            "关于",
-            "Redis TTK Client v1.0\n\n"
-            "基于 ttkbootstrap 的现代化 Redis 客户端\n"
-            "作者: 涵曦\n"
-            "技术栈: Python + ttkbootstrap + redis-py",
+        import webbrowser
+        from config.version import get_app_info
+        
+        # 获取应用程序信息
+        app_info = get_app_info()
+        
+        # 创建关于对话框窗口
+        about_window = ttk.Toplevel(self.root)
+        about_window.title("关于")
+        about_window.geometry("400x300")
+        about_window.resizable(False, False)
+        
+        # 设置窗口居中
+        about_window.transient(self.root)
+        about_window.grab_set()
+        
+        # 主框架
+        main_frame = ttk.Frame(about_window, padding=20)
+        main_frame.pack(fill=BOTH, expand=True)
+        
+        # 应用标题
+        title_label = ttk.Label(
+            main_frame, 
+            text="Redis TTK Client", 
+            font=("Arial", 16, "bold")
         )
+        title_label.pack(pady=(0, 5))
+        
+        # 版本号 - 从 pyproject.toml 动态读取
+        version_label = ttk.Label(
+            main_frame, 
+            text=f"v{app_info['version']}", 
+            font=("Arial", 12),
+            bootstyle=SECONDARY
+        )
+        version_label.pack(pady=(0, 15))
+        
+        # 描述 - 从 pyproject.toml 动态读取
+        desc_label = ttk.Label(
+            main_frame, 
+            text=app_info['description']
+        )
+        desc_label.pack(pady=(0, 10))
+        
+        # 作者 - 从 pyproject.toml 动态读取
+        author_label = ttk.Label(main_frame, text=f"作者: {app_info['author']}")
+        author_label.pack(pady=(0, 5))
+        
+        # 技术栈
+        tech_label = ttk.Label(
+            main_frame, 
+            text="技术栈: Python + ttkbootstrap + redis-py"
+        )
+        tech_label.pack(pady=(0, 15))
+        
+        # 项目链接按钮
+        def open_github():
+            webbrowser.open("https://github.com/hanxi/redis-ttk")
+        
+        github_btn = ttk.Button(
+            main_frame,
+            text="🔗 项目地址: https://github.com/hanxi/redis-ttk",
+            command=open_github,
+            bootstyle=PRIMARY
+        )
+        github_btn.pack(pady=(0, 20))
+        
+        # 关闭按钮
+        close_btn = ttk.Button(
+            main_frame,
+            text="关闭",
+            command=about_window.destroy,
+            bootstyle=SECONDARY
+        )
+        close_btn.pack()
+        
+        # 设置窗口居中
+        about_window.update_idletasks()
+        x = (about_window.winfo_screenwidth() // 2) - (about_window.winfo_width() // 2)
+        y = (about_window.winfo_screenheight() // 2) - (about_window.winfo_height() // 2)
+        about_window.geometry(f"+{x}+{y}")
 
     def on_closing(self):
         """窗口关闭事件"""
