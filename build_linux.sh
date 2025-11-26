@@ -98,15 +98,32 @@ build_app() {
 fix_permissions() {
     log_info "修复应用程序权限..."
     
-    local exe_path="dist/Redis-TTK"
+    # 检查可能的可执行文件名称
+    local exe_paths=("dist/Redis-TTK" "dist/redis-ttk" "dist/main")
+    local found_exe=""
     
-    if [[ -f "$exe_path" ]]; then
+    for exe_path in "${exe_paths[@]}"; do
+        if [[ -f "$exe_path" ]]; then
+            found_exe="$exe_path"
+            break
+        fi
+    done
+    
+    if [[ -n "$found_exe" ]]; then
         # 修复可执行文件权限
-        chmod +x "$exe_path"
+        chmod +x "$found_exe"
+        
+        # 如果文件名不是 Redis-TTK，重命名它
+        if [[ "$found_exe" != "dist/Redis-TTK" ]]; then
+            mv "$found_exe" "dist/Redis-TTK"
+            log_info "重命名可执行文件: $found_exe -> dist/Redis-TTK"
+        fi
         
         log_success "权限修复完成"
     else
-        log_error "找不到可执行文件: $exe_path"
+        log_error "找不到可执行文件，检查的路径: ${exe_paths[*]}"
+        log_info "dist 目录内容："
+        ls -la dist/ || true
         exit 1
     fi
 }
@@ -123,6 +140,8 @@ verify_executable() {
         log_success "Linux 可执行文件验证完成"
     else
         log_error "找不到可执行文件进行验证"
+        log_info "dist 目录内容："
+        ls -la dist/ || true
         exit 1
     fi
 }
