@@ -1,0 +1,95 @@
+## Here's my code: 
+[project]
+name = "redis-ttk"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "涵曦", email = "im.hanxi@gmail.com"},
+]
+dependencies = [
+    "ttkbootstrap>=1.19.0",
+    "redis>=7.1.0"
+]
+requires-python = "==3.14.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+# Ruff 代码格式化
+format = "ruff format ."
+# Ruff 代码检查
+lint = "ruff check ."
+# Ruff 代码检查并自动修复
+lint-fix = "ruff check . --fix"
+# 运行完整的代码质量检查
+check = {composite = ["lint", "format --check"]}
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.6",
+]
+build = [
+    "pyinstaller>=6.0.0",
+]
+
+# Ruff 配置
+[tool.ruff]
+# 目标 Python 版本
+target-version = "py314"
+
+# 包含的文件模式
+include = ["*.py", "*.pyi"]
+
+# 排除的目录和文件
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+# 每行最大字符数
+line-length = 88
+
+# 缩进宽度
+indent-width = 4
+
+[tool.ruff.lint]
+# 启用的规则集
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+]
+
+# 忽略的规则
+ignore = [
+    "E501",  # 行长度由 formatter 处理
+    "B008",  # 函数调用中的默认参数
+]
+
+# 每个文件的最大复杂度
+mccabe = {max-complexity = 10}
+
+[tool.ruff.lint.isort]
+# import 排序配置
+known-first-party = ["redis_client", "gui", "config"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.format]
+# 格式化配置
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

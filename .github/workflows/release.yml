@@ -1,0 +1,149 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: macos-latest
+            platform: macos
+            arch: x64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.14'
+
+    - name: Install PDM
+      uses: pdm-project/setup-pdm@v3
+      with:
+        python-version: '3.14'
+
+    - name: Get version from pyproject.toml
+      id: get_version
+      run: |
+        python -c "
+        import tomllib
+        with open('pyproject.toml', 'rb') as f:
+            data = tomllib.load(f)
+        version = data['project']['version']
+        print(f'VERSION={version}')
+        " >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Install dependencies
+      run: |
+        pdm install --prod
+        pdm add pyinstaller
+
+    - name: Create build script
+      run: |
+        cat > build_script.py << 'EOF'
+        import PyInstaller.__main__
+        import sys
+        import os
+        
+        # Get platform-specific settings
+        platform = "${{ matrix.platform }}"
+        
+        args = [
+            'main.py',
+            '--onefile',
+            '--windowed',
+            '--name=redis-ttk',
+            '--add-data=config:config',
+            '--add-data=gui:gui',
+            '--hidden-import=ttkbootstrap',
+            '--hidden-import=redis',
+            '--collect-all=ttkbootstrap',
+        ]
+        
+        if platform == "windows":
+            args.extend([
+                '--icon=NONE',
+                '--version-file=NONE'
+            ])
+        
+        PyInstaller.__main__.run(args)
+        EOF
+      shell: bash
+
+    - name: Build executable
+      run: |
+        pdm run python build_script.py
+
+    - name: Rename executable
+      run: |
+        cd dist
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        else
+          mv redis-ttk redis-ttk-${{ steps.get_version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+        fi
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: redis-ttk-${{ matrix.platform }}-${{ matrix.arch }}
+        path: |
+          dist/redis-ttk-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Get version from pyproject.toml
+      id: get_version
+      run: |
+        python -c "
+        import tomllib
+        with open('pyproject.toml', 'rb') as f:
+            data = tomllib.load(f)
+        version = data['project']['version']
+        print(f'VERSION={version}')
+        " >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Redis-TTK v${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        files: |
+          redis-ttk-*/redis-ttk-*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
