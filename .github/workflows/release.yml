@@ -43,12 +43,12 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.14'
+        python-version: '3.11'
 
     - name: Install PDM
       uses: pdm-project/setup-pdm@v3
       with:
-        python-version: '3.14'
+        python-version: '3.11'
 
     - name: Get version from pyproject.toml
       id: get_version
@@ -69,7 +69,21 @@ jobs:
     - name: Build executable using platform-specific script (Windows)
       if: matrix.platform == 'windows'
       run: |
+        echo "Current directory: %CD%"
+        dir
+        echo "Python version:"
+        python --version
+        echo "PDM version:"
+        pdm --version
+        echo "Starting Windows build script..."
         .\build_windows.bat --no-verify
+        echo "Build script completed, checking dist directory..."
+        if exist dist (
+          echo "dist directory exists"
+          dir dist
+        ) else (
+          echo "dist directory does not exist"
+        )
       shell: cmd
 
     - name: Build executable using platform-specific script (Unix)
