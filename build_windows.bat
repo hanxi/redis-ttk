@@ -95,6 +95,35 @@ if errorlevel 1 (
 call :log_success "应用程序打包完成"
 goto :eof
 
+REM 修复可执行文件名称
+:fix_executable_name
+call :log_info "修复可执行文件名称..."
+
+REM 检查可能的可执行文件名称
+set "found_exe="
+if exist "dist\Redis-TTK.exe" (
+    set "found_exe=dist\Redis-TTK.exe"
+) else if exist "dist\redis-ttk.exe" (
+    set "found_exe=dist\redis-ttk.exe"
+) else if exist "dist\main.exe" (
+    set "found_exe=dist\main.exe"
+)
+
+if not "%found_exe%"=="" (
+    REM 如果文件名不是 redis-ttk.exe，重命名它
+    if not "%found_exe%"=="dist\redis-ttk.exe" (
+        move "%found_exe%" "dist\redis-ttk.exe"
+        call :log_info "重命名可执行文件: %found_exe% -> dist\redis-ttk.exe"
+    )
+    call :log_success "可执行文件名称修复完成"
+) else (
+    call :log_error "找不到可执行文件，检查的路径: Redis-TTK.exe, redis-ttk.exe, main.exe"
+    call :log_info "dist 目录内容："
+    if exist dist dir dist
+    exit /b 1
+)
+goto :eof
+
 REM 验证可执行文件
 :verify_executable
 call :log_info "验证可执行文件..."
@@ -106,6 +135,8 @@ if exist "%exe_path%" (
     call :log_success "Windows 可执行文件验证完成"
 ) else (
     call :log_error "找不到可执行文件进行验证"
+    call :log_info "dist 目录内容："
+    if exist dist dir dist
     exit /b 1
 )
 goto :eof
@@ -199,6 +230,9 @@ call :check_spec_file
 if errorlevel 1 exit /b 1
 
 call :build_app
+if errorlevel 1 exit /b 1
+
+call :fix_executable_name
 if errorlevel 1 exit /b 1
 
 if "%skip_verify%"=="false" (
