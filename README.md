@@ -48,20 +48,12 @@ cd redis-ttk
 
 2. **安装依赖**
 ```bash
-# 使用 PDM（推荐）
 pdm install
-
-# 或使用 pip
-pip install -r requirements.txt
 ```
 
 3. **运行应用**
 ```bash
-# 使用 PDM
 pdm run python main.py
-
-# 或直接运行
-python main.py
 ```
 
 ## 📁 项目结构
