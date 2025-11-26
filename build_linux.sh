@@ -145,8 +145,14 @@ fix_permissions() {
         if [[ "$found_exe" == "$target_path" ]]; then
             # 文件已经在正确位置
             log_info "可执行文件已在正确位置: $found_exe"
-        elif [[ "$found_exe" == dist/*/Redis-TTK ]] || [[ "$found_exe" == dist/*/redis-ttk ]] || [[ "$found_exe" == dist/*/main ]]; then
+        elif [[ "$found_exe" =~ ^dist/.+/Redis-TTK$ ]] || [[ "$found_exe" =~ ^dist/.+/redis-ttk$ ]] || [[ "$found_exe" =~ ^dist/.+/main$ ]]; then
             # 这是目录模式，需要复制文件到根目录
+            # 但要确保目标路径不存在或不是目录
+            if [[ -d "$target_path" ]]; then
+                # 如果目标是目录，删除它
+                rm -rf "$target_path"
+                log_info "删除目标目录: $target_path"
+            fi
             cp "$found_exe" "$target_path"
             log_info "复制可执行文件: $found_exe -> $target_path"
         else
