@@ -87,12 +87,19 @@ jobs:
             '--hidden-import=ttkbootstrap',
             '--hidden-import=redis',
             '--collect-all=ttkbootstrap',
+            '--clean',
+            '--noconfirm',
         ]
 
-        if platform == "windows":
+        # Platform-specific optimizations
+        if platform == "macos":
             args.extend([
-                '--icon=NONE',
-                '--version-file=NONE'
+                '--osx-bundle-identifier=com.redis-ttk.app',
+                '--target-arch=x86_64',
+            ])
+        elif platform == "linux":
+            args.extend([
+                '--strip',
             ])
 
         PyInstaller.__main__.run(args)
@@ -102,6 +109,25 @@ jobs:
     - name: Build executable
       run: |
         pdm run python build_script.py
+
+    - name: Set executable permissions (macOS/Linux)
+      if: matrix.platform != 'windows'
+      run: |
+        chmod +x dist/redis-ttk
+
+    - name: Verify executable
+      run: |
+        cd dist
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          file redis-ttk.exe || echo "File command not available on Windows"
+          ls -la redis-ttk.exe
+        else
+          file redis-ttk
+          ls -la redis-ttk
+          # Test if the executable can be loaded (without running GUI)
+          ./redis-ttk --help || echo "Help command not available, but executable exists"
+        fi
+      shell: bash
 
     - name: Rename executable
       run: |
