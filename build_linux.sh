@@ -147,14 +147,19 @@ fix_permissions() {
             log_info "可执行文件已在正确位置: $found_exe"
         elif [[ "$found_exe" =~ ^dist/.+/Redis-TTK$ ]] || [[ "$found_exe" =~ ^dist/.+/redis-ttk$ ]] || [[ "$found_exe" =~ ^dist/.+/main$ ]]; then
             # 这是目录模式，需要复制文件到根目录
-            # 但要确保目标路径不存在或不是目录
-            if [[ -d "$target_path" ]]; then
-                # 如果目标是目录，删除它
-                rm -rf "$target_path"
-                log_info "删除目标目录: $target_path"
-            fi
-            cp "$found_exe" "$target_path"
-            log_info "复制可执行文件: $found_exe -> $target_path"
+            # 先复制文件，再清理目录
+            local temp_target="dist/Redis-TTK-temp"
+            cp "$found_exe" "$temp_target"
+            log_info "临时复制可执行文件: $found_exe -> $temp_target"
+            
+            # 删除原目录
+            local source_dir=$(dirname "$found_exe")
+            rm -rf "$source_dir"
+            log_info "删除源目录: $source_dir"
+            
+            # 移动到最终位置
+            mv "$temp_target" "$target_path"
+            log_info "移动到最终位置: $temp_target -> $target_path"
         else
             # 这是单个文件，需要重命名
             mv "$found_exe" "$target_path"
