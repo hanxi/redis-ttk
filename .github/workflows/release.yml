@@ -65,95 +65,17 @@ jobs:
     - name: Install dependencies
       run: |
         pdm install --prod
-        pdm add pyinstaller
 
-    - name: Create build script
+    - name: Build executable using platform-specific script
       run: |
-        cat > build_script.py << 'EOF'
-        import PyInstaller.__main__
-        import sys
-        import os
-
-        # Get platform-specific settings
-        platform = "${{ matrix.platform }}"
-
-        args = [
-            'main.py',
-            '--onefile',
-            '--windowed',
-            '--name=redis-ttk',
-            '--add-data=config:config',
-            '--add-data=gui:gui',
-            '--hidden-import=ttkbootstrap',
-            '--hidden-import=redis',
-            '--hidden-import=tkinter',
-            '--hidden-import=tkinter.ttk',
-            '--hidden-import=PIL',
-            '--hidden-import=PIL._tkinter_finder',
-            '--collect-all=ttkbootstrap',
-            '--collect-submodules=ttkbootstrap',
-            '--collect-submodules=redis',
-            '--clean',
-            '--noconfirm',
-            '--noupx',
-        ]
-
-        # Platform-specific optimizations
-        if platform == "macos":
-            args.extend([
-                '--osx-bundle-identifier=com.redis-ttk.app',
-                '--target-arch=arm64',
-                '--codesign-identity=-',
-            ])
-        elif platform == "linux":
-            args.extend([
-                '--strip',
-            ])
-        elif platform == "windows":
-            args.extend([
-                '--uac-admin',
-            ])
-
-        PyInstaller.__main__.run(args)
-        EOF
-      shell: bash
-
-    - name: Build executable
-      run: |
-        pdm run python build_script.py
-
-    - name: Set executable permissions and sign (macOS/Linux)
-      if: matrix.platform != 'windows'
-      run: |
-        chmod +x dist/redis-ttk
-        if [ "${{ matrix.platform }}" = "macos" ]; then
-          # Remove quarantine attribute and sign the executable
-          xattr -d com.apple.quarantine dist/redis-ttk || true
-          codesign --force --deep --sign - dist/redis-ttk || echo "Code signing failed, but continuing"
-        fi
-
-    - name: Verify executable
-      run: |
-        cd dist
         if [ "${{ matrix.platform }}" = "windows" ]; then
-          file redis-ttk.exe || echo "File command not available on Windows"
-          ls -la redis-ttk.exe
-          echo "Windows executable verified"
+          ./build_windows.bat --no-verify
+        elif [ "${{ matrix.platform }}" = "macos" ]; then
+          chmod +x ./build_mac.sh
+          ./build_mac.sh --no-test --no-dmg
         else
-          file redis-ttk
-          ls -la redis-ttk
-          # Check if the executable is valid
-          if [ -f redis-ttk ]; then
-            echo "Executable exists and has size: $(stat -f%z redis-ttk 2>/dev/null || stat -c%s redis-ttk 2>/dev/null || echo 'unknown') bytes"
-            # Verify it's a valid Mach-O executable on macOS
-            if [ "${{ matrix.platform }}" = "macos" ]; then
-              otool -h redis-ttk >/dev/null 2>&1 && echo "Valid Mach-O executable" || echo "Warning: Not a valid Mach-O executable"
-            fi
-          else
-            echo "Error: Executable not found!"
-            exit 1
-          fi
-          echo "Executable file verified - skipping GUI test in headless environment"
+          chmod +x ./build_linux.sh
+          ./build_linux.sh --no-verify
         fi
       shell: bash
 
@@ -168,9 +90,31 @@ jobs:
         fi
         
         if [ "${{ matrix.platform }}" = "windows" ]; then
-          mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+          if [ -f "redis-ttk.exe" ]; then
+            mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+          else
+            echo "Error: redis-ttk.exe not found for renaming"
+            exit 1
+          fi
+        elif [ "${{ matrix.platform }}" = "macos" ]; then
+          if [ -d "Redis-TTK.app" ]; then
+            # For macOS app bundle, create a zip archive
+            zip -r redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.zip Redis-TTK.app
+            rm -rf Redis-TTK.app
+          elif [ -f "Redis-TTK" ]; then
+            # For standalone executable
+            mv Redis-TTK redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}
+          else
+            echo "Error: Neither Redis-TTK.app nor Redis-TTK found for renaming"
+            exit 1
+          fi
         else
-          mv redis-ttk redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}
+          if [ -f "Redis-TTK" ]; then
+            mv Redis-TTK redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}
+          else
+            echo "Error: Redis-TTK not found for renaming"
+            exit 1
+          fi
         fi
       shell: bash
 

@@ -14,25 +14,12 @@ readme = "README.md"
 license = {text = "MIT"}
 
 
-[tool.pdm]
-distribution = false
-
-[tool.pdm.scripts]
-# Ruff 代码格式化
-format = "ruff format ."
-# Ruff 代码检查
-lint = "ruff check ."
-# Ruff 代码检查并自动修复
-lint-fix = "ruff check . --fix"
-# 运行完整的代码质量检查
-check = {composite = ["lint", "format --check"]}
-
 [dependency-groups]
 dev = [
     "ruff>=0.14.6",
 ]
 build = [
-    "pyinstaller>=6.0.0",
+    "pyinstaller>=6.17.0",
 ]
 
 # Ruff 配置
@@ -92,3 +79,17 @@ lines-after-imports = 2
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+# Ruff 代码格式化
+format = "ruff format ."
+# Ruff 代码检查
+lint = "ruff check ."
+# Ruff 代码检查并自动修复
+lint-fix = "ruff check . --fix"
+# 运行完整的代码质量检查
+check = {composite = ["lint", "format --check"]}
+
