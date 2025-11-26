@@ -139,11 +139,16 @@ fix_permissions() {
         # 修复可执行文件权限
         chmod +x "$found_exe"
         
-        # 如果是目录模式，需要创建一个符号链接或复制到根目录
+        # 如果是目录模式，需要复制到根目录
         if [[ "$found_exe" == dist/*/Redis-TTK ]] || [[ "$found_exe" == dist/*/redis-ttk ]] || [[ "$found_exe" == dist/*/main ]]; then
-            # 复制可执行文件到 dist 根目录
-            cp "$found_exe" "dist/Redis-TTK"
-            log_info "复制可执行文件: $found_exe -> dist/Redis-TTK"
+            # 检查是否需要复制（避免复制到自己）
+            if [[ "$found_exe" != "dist/Redis-TTK" ]]; then
+                # 复制可执行文件到 dist 根目录
+                cp "$found_exe" "dist/Redis-TTK"
+                log_info "复制可执行文件: $found_exe -> dist/Redis-TTK"
+            else
+                log_info "可执行文件已在正确位置: $found_exe"
+            fi
         elif [[ "$found_exe" != "dist/Redis-TTK" ]]; then
             # 重命名单个文件
             mv "$found_exe" "dist/Redis-TTK"
