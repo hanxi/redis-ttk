@@ -10,6 +10,14 @@ on:
         description: 'Version to release (e.g., v1.0.0)'
         required: true
         default: 'v0.1.0'
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - test
 
 jobs:
   build:
@@ -65,10 +73,10 @@ jobs:
         import PyInstaller.__main__
         import sys
         import os
-        
+
         # Get platform-specific settings
         platform = "${{ matrix.platform }}"
-        
+
         args = [
             'main.py',
             '--onefile',
@@ -80,13 +88,13 @@ jobs:
             '--hidden-import=redis',
             '--collect-all=ttkbootstrap',
         ]
-        
+
         if platform == "windows":
             args.extend([
                 '--icon=NONE',
                 '--version-file=NONE'
             ])
-        
+
         PyInstaller.__main__.run(args)
         EOF
       shell: bash
@@ -98,10 +106,17 @@ jobs:
     - name: Rename executable
       run: |
         cd dist
-        if [ "${{ matrix.platform }}" = "windows" ]; then
-          mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        BUILD_TYPE="${{ github.event.inputs.build_type || 'release' }}"
+        if [ "$BUILD_TYPE" = "test" ]; then
+          SUFFIX="-test-$(date +%Y%m%d-%H%M%S)"
         else
-          mv redis-ttk redis-ttk-${{ steps.get_version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+          SUFFIX=""
+        fi
+        
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        else
+          mv redis-ttk redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}
         fi
       shell: bash
 
@@ -115,8 +130,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    
+    if: startsWith(github.ref, 'refs/tags/') && (github.event.inputs.build_type != 'test' || github.event.inputs.build_type == '')
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -147,3 +162,34 @@ jobs:
           redis-ttk-*/redis-ttk-*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-build:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build_type == 'test'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Get version from pyproject.toml
+      id: get_version
+      run: |
+        python -c "
+        import tomllib
+        with open('pyproject.toml', 'rb') as f:
+            data = tomllib.load(f)
+        version = data['project']['version']
+        print(f'VERSION={version}')
+        " >> $GITHUB_OUTPUT
+
+    - name: Upload test build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: redis-ttk-test-build-${{ steps.get_version.outputs.VERSION }}
+        path: |
+          redis-ttk-*/redis-ttk-*
+        retention-days: 7
