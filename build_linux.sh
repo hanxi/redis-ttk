@@ -98,10 +98,12 @@ build_app() {
 fix_permissions() {
     log_info "修复应用程序权限..."
     
-    # 检查可能的可执行文件名称
+    # 检查可能的可执行文件名称和目录
     local exe_paths=("dist/Redis-TTK" "dist/redis-ttk" "dist/main")
+    local exe_dirs=("dist/Redis-TTK" "dist/redis-ttk" "dist/main")
     local found_exe=""
     
+    # 首先检查是否有单个可执行文件
     for exe_path in "${exe_paths[@]}"; do
         if [[ -f "$exe_path" ]]; then
             found_exe="$exe_path"
@@ -109,21 +111,57 @@ fix_permissions() {
         fi
     done
     
+    # 如果没有找到单个文件，检查是否有目录（COLLECT 模式）
+    if [[ -z "$found_exe" ]]; then
+        for exe_dir in "${exe_dirs[@]}"; do
+            if [[ -d "$exe_dir" ]]; then
+                # 在目录中查找可执行文件
+                local exe_in_dir="$exe_dir/Redis-TTK"
+                if [[ -f "$exe_in_dir" ]]; then
+                    found_exe="$exe_in_dir"
+                    log_info "找到目录模式的可执行文件: $found_exe"
+                    break
+                fi
+                # 尝试其他可能的名称
+                for name in "redis-ttk" "main"; do
+                    exe_in_dir="$exe_dir/$name"
+                    if [[ -f "$exe_in_dir" ]]; then
+                        found_exe="$exe_in_dir"
+                        log_info "找到目录模式的可执行文件: $found_exe"
+                        break 2
+                    fi
+                done
+            fi
+        done
+    fi
+    
     if [[ -n "$found_exe" ]]; then
         # 修复可执行文件权限
         chmod +x "$found_exe"
         
-        # 如果文件名不是 Redis-TTK，重命名它
-        if [[ "$found_exe" != "dist/Redis-TTK" ]]; then
+        # 如果是目录模式，需要创建一个符号链接或复制到根目录
+        if [[ "$found_exe" == dist/*/Redis-TTK ]] || [[ "$found_exe" == dist/*/redis-ttk ]] || [[ "$found_exe" == dist/*/main ]]; then
+            # 复制可执行文件到 dist 根目录
+            cp "$found_exe" "dist/Redis-TTK"
+            log_info "复制可执行文件: $found_exe -> dist/Redis-TTK"
+        elif [[ "$found_exe" != "dist/Redis-TTK" ]]; then
+            # 重命名单个文件
             mv "$found_exe" "dist/Redis-TTK"
             log_info "重命名可执行文件: $found_exe -> dist/Redis-TTK"
         fi
         
         log_success "权限修复完成"
     else
-        log_error "找不到可执行文件，检查的路径: ${exe_paths[*]}"
+        log_error "找不到可执行文件，检查的路径: ${exe_paths[*]} 和目录: ${exe_dirs[*]}"
         log_info "dist 目录内容："
         ls -la dist/ || true
+        # 如果有目录，也显示目录内容
+        for dir in "${exe_dirs[@]}"; do
+            if [[ -d "$dir" ]]; then
+                log_info "$dir 目录内容："
+                ls -la "$dir" || true
+            fi
+        done
         exit 1
     fi
 }
