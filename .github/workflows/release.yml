@@ -84,7 +84,29 @@ jobs:
         fi
       shell: bash
 
-    - name: Rename executable
+    - name: Rename executable (Windows)
+      if: matrix.platform == 'windows'
+      run: |
+        cd dist
+        set BUILD_TYPE=${{ github.event.inputs.build_type || 'release' }}
+        if "%BUILD_TYPE%"=="test" (
+          for /f "tokens=1-4 delims=/ " %%a in ('date /t') do set mydate=%%c%%a%%b
+          for /f "tokens=1-2 delims=: " %%a in ('time /t') do set mytime=%%a%%b
+          set SUFFIX=-test-%mydate%-%mytime%
+        ) else (
+          set SUFFIX=
+        )
+        
+        if exist redis-ttk.exe (
+          move redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}%SUFFIX%-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        ) else (
+          echo Error: redis-ttk.exe not found for renaming
+          exit /b 1
+        )
+      shell: cmd
+
+    - name: Rename executable (Unix)
+      if: matrix.platform != 'windows'
       run: |
         cd dist
         BUILD_TYPE="${{ github.event.inputs.build_type || 'release' }}"
@@ -94,14 +116,7 @@ jobs:
           SUFFIX=""
         fi
         
-        if [ "${{ matrix.platform }}" = "windows" ]; then
-          if [ -f "redis-ttk.exe" ]; then
-            mv redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.exe
-          else
-            echo "Error: redis-ttk.exe not found for renaming"
-            exit 1
-          fi
-        elif [ "${{ matrix.platform }}" = "macos" ]; then
+        if [ "${{ matrix.platform }}" = "macos" ]; then
           if [ -d "Redis-TTK.app" ]; then
             # For macOS app bundle, create a zip archive
             zip -r redis-ttk-${{ steps.get_version.outputs.VERSION }}${SUFFIX}-${{ matrix.platform }}-${{ matrix.arch }}.zip Redis-TTK.app
