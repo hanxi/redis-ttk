@@ -66,11 +66,16 @@ jobs:
       run: |
         pdm install --prod
 
-    - name: Build executable using platform-specific script
+    - name: Build executable using platform-specific script (Windows)
+      if: matrix.platform == 'windows'
       run: |
-        if [ "${{ matrix.platform }}" = "windows" ]; then
-          ./build_windows.bat --no-verify
-        elif [ "${{ matrix.platform }}" = "macos" ]; then
+        .\build_windows.bat --no-verify
+      shell: cmd
+
+    - name: Build executable using platform-specific script (Unix)
+      if: matrix.platform != 'windows'
+      run: |
+        if [ "${{ matrix.platform }}" = "macos" ]; then
           chmod +x ./build_mac.sh
           ./build_mac.sh --no-test --no-dmg
         else
