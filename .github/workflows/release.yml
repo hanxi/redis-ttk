@@ -34,7 +34,7 @@ jobs:
             arch: x64
           - os: macos-latest
             platform: macos
-            arch: x64
+            arch: arm64
 
     steps:
     - name: Checkout code
@@ -95,7 +95,6 @@ jobs:
         if platform == "macos":
             args.extend([
                 '--osx-bundle-identifier=com.redis-ttk.app',
-                '--target-arch=x86_64',
             ])
         elif platform == "linux":
             args.extend([
