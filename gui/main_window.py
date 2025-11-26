@@ -664,7 +664,9 @@ class MainWindow:
         # 描述 - 从 pyproject.toml 动态读取
         desc_label = ttk.Label(
             main_frame, 
-            text=app_info['description']
+            text=app_info['description'],
+            wraplength=300,
+            justify='center'
         )
         desc_label.pack(pady=(0, 10))
         

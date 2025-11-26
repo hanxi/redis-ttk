@@ -1,8 +1,7 @@
-## Here's my code: 
 [project]
 name = "redis-ttk"
 version = "0.1.2"
-description = "Default template for PDM package"
+description = "A modern Redis client GUI application built with Python and ttkbootstrap"
 authors = [
     {name = "涵曦", email = "im.hanxi@gmail.com"},
 ]
