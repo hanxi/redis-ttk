@@ -75,14 +75,23 @@ jobs:
         python --version
         echo "PDM version:"
         pdm --version
-        echo "Starting Windows build script..."
-        .\build_windows.bat --no-verify
+        echo "Setting up environment for build script..."
+        set "FORCE_COLOR=0"
+        set "NO_COLOR=1"
+        echo "Starting Windows build script with timeout..."
+        timeout /t 1800 .\build_windows.bat --no-verify
+        set BUILD_EXIT_CODE=%ERRORLEVEL%
+        echo "Build script exit code: %BUILD_EXIT_CODE%"
         echo "Build script completed, checking dist directory..."
         if exist dist (
           echo "dist directory exists"
           dir dist
         ) else (
           echo "dist directory does not exist"
+        )
+        if %BUILD_EXIT_CODE% neq 0 (
+          echo "Build script failed with exit code %BUILD_EXIT_CODE%"
+          exit /b %BUILD_EXIT_CODE%
         )
       shell: cmd
 

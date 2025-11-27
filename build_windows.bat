@@ -4,11 +4,34 @@ REM Redis-TTK Windows 打包脚本
 setlocal enabledelayedexpansion
 
 REM 颜色定义（Windows 10+ 支持 ANSI 转义序列）
-set "RED=[31m"
-set "GREEN=[32m"
-set "YELLOW=[33m"
-set "BLUE=[34m"
-set "NC=[0m"
+REM 检查是否禁用颜色输出
+if defined NO_COLOR (
+    set "RED="
+    set "GREEN="
+    set "YELLOW="
+    set "BLUE="
+    set "NC="
+) else if defined FORCE_COLOR (
+    if "%FORCE_COLOR%"=="0" (
+        set "RED="
+        set "GREEN="
+        set "YELLOW="
+        set "BLUE="
+        set "NC="
+    ) else (
+        set "RED=[31m"
+        set "GREEN=[32m"
+        set "YELLOW=[33m"
+        set "BLUE=[34m"
+        set "NC=[0m"
+    )
+) else (
+    set "RED=[31m"
+    set "GREEN=[32m"
+    set "YELLOW=[33m"
+    set "BLUE=[34m"
+    set "NC=[0m"
+)
 
 REM 日志函数
 :log_info
