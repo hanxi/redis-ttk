@@ -1,6 +1,6 @@
 [project]
 name = "redis-ttk"
-version = "0.2.0"
+version = "0.2.1"
 description = "A modern Redis client GUI application built with Python and ttkbootstrap"
 authors = [
     {name = "涵曦", email = "im.hanxi@gmail.com"},
@@ -25,7 +25,7 @@ build = [
 # Ruff 配置
 [tool.ruff]
 # 目标 Python 版本
-target-version = "0.2.0"
+target-version = "0.2.1"
 
 # 包含的文件模式
 include = ["*.py", "*.pyi"]
