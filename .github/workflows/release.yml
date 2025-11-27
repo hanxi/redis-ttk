@@ -64,7 +64,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pdm install --prod -G build
+        pdm install -G build
 
     - name: Build executable using platform-specific script (Windows)
       if: matrix.platform == 'windows'
