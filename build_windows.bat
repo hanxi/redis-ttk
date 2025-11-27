@@ -61,13 +61,19 @@ echo [INFO] Application build completed
 REM Fix executable name
 echo [INFO] Fixing executable name...
 if exist "dist\Redis-TTK.exe" (
+    REM Single file mode
     if not exist "dist\redis-ttk.exe" (
         move "dist\Redis-TTK.exe" "dist\redis-ttk.exe"
         echo [INFO] Renamed Redis-TTK.exe to redis-ttk.exe
     )
 ) else if exist "dist\main.exe" (
+    REM Single file mode - rename from main.exe
     move "dist\main.exe" "dist\redis-ttk.exe"
     echo [INFO] Renamed main.exe to redis-ttk.exe
+) else if exist "dist\Redis-TTK\Redis-TTK.exe" (
+    REM Directory mode - copy executable to root dist directory
+    copy "dist\Redis-TTK\Redis-TTK.exe" "dist\redis-ttk.exe"
+    echo [INFO] Copied Redis-TTK.exe from directory to dist\redis-ttk.exe
 )
 
 REM Verify executable
