@@ -108,7 +108,7 @@ jobs:
       shell: bash
 
     - name: Rename executable (Windows)
-      if: matrix.platform == 'windows'
+      if: matrix.platform == 'windows' && success()
       run: |
         echo "Checking dist directory contents..."
         if exist dist (
@@ -148,7 +148,7 @@ jobs:
       shell: cmd
 
     - name: Rename executable (Unix)
-      if: matrix.platform != 'windows'
+      if: matrix.platform != 'windows' && success()
       run: |
         cd dist
         BUILD_TYPE="${{ github.event.inputs.build_type || 'release' }}"
