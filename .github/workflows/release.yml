@@ -78,8 +78,8 @@ jobs:
         echo "Setting up environment for build script..."
         set "FORCE_COLOR=0"
         set "NO_COLOR=1"
-        echo "Starting Windows build script with timeout..."
-        timeout /t 1800 .\build_windows.bat --no-verify
+        echo "Starting Windows build script..."
+        .\build_windows.bat --no-verify
         set BUILD_EXIT_CODE=%ERRORLEVEL%
         echo "Build script exit code: %BUILD_EXIT_CODE%"
         echo "Build script completed, checking dist directory..."
