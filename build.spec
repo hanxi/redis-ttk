@@ -96,36 +96,37 @@ except ImportError:
 pyz = PYZ(a.pure, a.zipped_data, cipher=None)
 
 # 可执行文件配置
-exe = EXE(
-    pyz,
-    a.scripts,
-    exclude_binaries=True,
-    name=app_name,
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    console=False,
-    disable_windowed_traceback=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-)
-
-# 收集文件
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name=app_name,
-)
-
-# macOS 应用程序包配置
 if sys.platform == "darwin":
+    # macOS 使用目录模式
+    exe = EXE(
+        pyz,
+        a.scripts,
+        exclude_binaries=True,
+        name=app_name,
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        console=False,
+        disable_windowed_traceback=False,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=None,
+    )
+    
+    # 收集文件
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        name=app_name,
+    )
+    
+    # macOS 应用程序包配置
     app = BUNDLE(
         coll,
         name=f"{app_name}.app",
@@ -145,4 +146,26 @@ if sys.platform == "darwin":
             "CFBundleVersion": "0.1.2",
             "NSHumanReadableCopyright": "Copyright © 2024 涵曦. All rights reserved.",
         },
+    )
+else:
+    # 其他平台使用单文件模式
+    exe = EXE(
+        pyz,
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        [],
+        name=app_name,
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
+        console=False,
+        disable_windowed_traceback=False,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=None,
     )
