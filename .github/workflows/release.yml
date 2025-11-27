@@ -101,6 +101,15 @@ jobs:
     - name: Rename executable (Windows)
       if: matrix.platform == 'windows'
       run: |
+        echo "Checking dist directory contents..."
+        if exist dist (
+          echo "dist directory exists"
+          dir dist
+        ) else (
+          echo "dist directory does not exist"
+          exit /b 1
+        )
+        
         cd dist
         set BUILD_TYPE=${{ github.event.inputs.build_type || 'release' }}
         if "%BUILD_TYPE%"=="test" (
@@ -111,10 +120,20 @@ jobs:
           set SUFFIX=
         )
         
+        REM Check for different possible executable names
         if exist redis-ttk.exe (
+          echo "Found redis-ttk.exe"
           move redis-ttk.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}%SUFFIX%-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        ) else if exist Redis-TTK.exe (
+          echo "Found Redis-TTK.exe, renaming to target name"
+          move Redis-TTK.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}%SUFFIX%-${{ matrix.platform }}-${{ matrix.arch }}.exe
+        ) else if exist Redis-TTK\Redis-TTK.exe (
+          echo "Found Redis-TTK.exe in Redis-TTK directory"
+          move Redis-TTK\Redis-TTK.exe redis-ttk-${{ steps.get_version.outputs.VERSION }}%SUFFIX%-${{ matrix.platform }}-${{ matrix.arch }}.exe
         ) else (
-          echo Error: redis-ttk.exe not found for renaming
+          echo "Error: No executable found for renaming"
+          echo "Available files:"
+          dir /s *.exe
           exit /b 1
         )
       shell: cmd
