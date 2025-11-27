@@ -60,7 +60,8 @@ install_build_deps() {
     log_info "安装构建依赖..."
     
     # 确保安装了构建依赖
-    pdm add -dG build pyinstaller
+    pdm lock
+    pdm install -dG build
     
     log_success "构建依赖安装完成"
 }

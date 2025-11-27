@@ -60,7 +60,8 @@ REM 安装构建依赖
 :install_build_deps
 call :log_info "安装构建依赖..."
 
-pdm add -dG build pyinstaller
+pdm lock
+pdm install -dG build
 if errorlevel 1 (
     call :log_error "构建依赖安装失败"
     exit /b 1
