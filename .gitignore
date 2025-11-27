@@ -8,3 +8,4 @@ pdm.lock
 .aone_copilot/
 dist/
 build/
+.DS_Store
